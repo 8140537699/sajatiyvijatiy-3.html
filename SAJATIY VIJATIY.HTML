@@ -1,0 +1,158 @@
+DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>પ્રાથમિક શાળા ખરોડ - સજાતીય જોડીઓ</title>
+    <style>
+        :root { --p: #1e3799; --s: #4a69bd; --a: #f39c12; --ok: #10ac84; --err: #ee5253; }
+        body { font-family: 'Arial', sans-serif; background: #f1f2f6; padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .header { background: var(--p); color: white; padding: 15px; border-radius: 12px; width: 95%; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        /* કાર્ડ રાખવાનું બોક્સ */
+        .card-dock { background: white; padding: 20px; border-radius: 10px; border: 2px dashed #bbb; width: 95%; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; min-height: 80px; margin-bottom: 20px; }
+        .card { padding: 12px 20px; border-radius: 6px; color: white; font-weight: bold; cursor: grab; font-size: 20px; background: var(--s); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        /* જોડીઓ માટેનું ગ્રીડ લેઆઉટ */
+        .pair-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            justify-content: center; 
+            width: 100%; 
+            max-width: 1200px; 
+        }
+        .pair-row { 
+            background: #fff; 
+            padding: 15px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 10px;
+            width: 250px; 
+        }
+        .row-label { font-weight: bold; color: var(--p); font-size: 18px; border-bottom: 2px solid #eee; width: 100%; text-align: center; padding-bottom: 5px; }
+        .drop-zone { width: 100%; height: 60px; background: #f9f9f9; border: 2px dashed #ccc; border-radius: 8px; display: flex; justify-content: center; align-items: center; }
+
+        .controls { margin-top: 30px; display: flex; gap: 15px; }
+        button { padding: 12px 35px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; color: white; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .btn-new { background: var(--p); } .btn-check { background: var(--ok); }
+        button:hover { transform: scale(1.05); filter: brightness(1.1); }
+        sup { font-size: 0.6em; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>પ્રાથમિક શાળા ખરોડ</h1>
+        <p>સજાતીય પદો શોધો અને બાજુ-બાજુમાં ગોઠવો</p>
+    </div>
+
+    <div class="card-dock" id="dock" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+
+    <div class="pair-grid">
+        <div class="pair-row">
+            <div class="row-label">જોડી ૧</div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+        </div>
+        <div class="pair-row">
+            <div class="row-label">જોડી ૨</div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+        </div>
+        <div class="pair-row">
+            <div class="row-label">જોડી ૩</div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+        </div>
+        <div class="pair-row">
+            <div class="row-label">જોડી ૪</div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+        </div>
+        <div class="pair-row">
+            <div class="row-label">જોડી ૫</div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+            <div class="drop-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-new" onclick="setupGame()">નવી રકમ</button>
+        <button class="btn-check" onclick="checkPairs()">ચકાસો</button>
+    </div>
+
+    <script>
+        function setupGame() {
+            const dock = document.getElementById('dock');
+            dock.innerHTML = '';
+            document.querySelectorAll('.drop-zone').forEach(dz => {
+                dz.innerHTML = '';
+                dz.style.borderColor = "#ccc";
+                dz.style.background = "#f9f9f9";
+            });
+
+            const vars = ['x', 'y', 'z', 'ab', 'xy', 'p²', 'm', 'n', 'a²b', 'x²y', 'k', 'pq'];
+            let selectedVars = [...vars].sort(() => Math.random() - 0.5).slice(0, 5);
+            
+            let allCards = [];
+            selectedVars.forEach((v, index) => {
+                let c1 = (Math.floor(Math.random() * 30) - 15) || 5;
+                let c2 = (Math.floor(Math.random() * 30) - 15) || -3;
+                if(c1 === c2) c2 += 5;
+                allCards.push({ val: c1 + v, group: index });
+                allCards.push({ val: c2 + v, group: index });
+            });
+
+            allCards.sort(() => Math.random() - 0.5).forEach((cardData, i) => {
+                const div = document.createElement('div');
+                div.className = 'card'; div.id = 'card-' + i;
+                div.innerHTML = cardData.val.replace(/²/g, "<sup>2</sup>");
+                div.draggable = true; div.dataset.group = cardData.group;
+                div.addEventListener('dragstart', (e) => e.dataTransfer.setData('text', e.target.id));
+                dock.appendChild(div);
+            });
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const cardId = e.dataTransfer.getData('text');
+            const card = document.getElementById(cardId);
+            const target = e.target.closest('.drop-zone') || e.target.closest('#dock');
+            
+            if (target) {
+                if(target.classList.contains('drop-zone') && target.children.length > 0) return;
+                target.appendChild(card);
+                card.style.background = "var(--s)";
+            }
+        }
+
+        function checkPairs() {
+            const rows = document.querySelectorAll('.pair-row');
+            let perfectCount = 0;
+
+            rows.forEach(row => {
+                const zones = row.querySelectorAll('.drop-zone');
+                const card1 = zones[0].querySelector('.card');
+                const card2 = zones[1].querySelector('.card');
+
+                if(card1 && card2) {
+                    if(card1.dataset.group === card2.dataset.group) {
+                        card1.style.background = card2.style.background = "var(--ok)";
+                        zones[0].style.background = zones[1].style.background = "#e8f5e9";
+                        perfectCount++;
+                    } else {
+                        card1.style.background = card2.style.background = "var(--err)";
+                        zones[0].style.background = zones[1].style.background = "#ffebee";
+                    }
+                }
+            });
+            if(perfectCount === 5) alert("વાહ! બધી જ જોડીઓ સાચી છે.");
+        }
+        setupGame();
+    </script>
+</body>
+</html>
